@@ -1,0 +1,278 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local allowedPlaceIds = {
+    [11137575513] = true,
+    [14044614256] = true,
+}
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ZundaSpyGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 320, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -160, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.BorderSizePixel = 2
+mainFrame.BorderColor3 = Color3.new(1, 1, 1)
+mainFrame.Parent = screenGui
+
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 24, 0, 24)
+minimizeButton.Position = UDim2.new(1, -28, 0, 4)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+minimizeButton.Text = "–"
+minimizeButton.TextColor3 = Color3.new(1, 1, 1)
+minimizeButton.Font = Enum.Font.SourceSans
+minimizeButton.TextSize = 20
+minimizeButton.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -30, 0, 30)
+titleLabel.Position = UDim2.new(0, 5, 0, 5)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Zunda Spy"
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.Font = Enum.Font.SourceSans
+titleLabel.TextSize = 22
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = mainFrame
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0.5, 0, 0, 30)
+toggleButton.Position = UDim2.new(0.25, 0, 0, 40)
+toggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+toggleButton.Text = "Off :-("
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.SourceSans
+toggleButton.TextSize = 18
+toggleButton.Parent = mainFrame
+
+local filterLabel = Instance.new("TextLabel")
+filterLabel.Size = UDim2.new(1, -20, 0, 20)
+filterLabel.Position = UDim2.new(0, 10, 0, 80)
+filterLabel.BackgroundTransparency = 1
+filterLabel.Text = "only see silent commands (TCO) ⬇️"
+filterLabel.TextColor3 = Color3.new(1, 1, 1)
+filterLabel.Font = Enum.Font.SourceSans
+filterLabel.TextSize = 14
+filterLabel.TextXAlignment = Enum.TextXAlignment.Left
+filterLabel.Parent = mainFrame
+
+local filterToggle = Instance.new("TextButton")
+filterToggle.Size = UDim2.new(0.5, 0, 0, 24)
+filterToggle.Position = UDim2.new(0.25, 0, 0, 105)
+filterToggle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+filterToggle.Text = "Off :-("
+filterToggle.TextColor3 = Color3.new(1, 1, 1)
+filterToggle.Font = Enum.Font.SourceSans
+filterToggle.TextSize = 16
+filterToggle.Parent = mainFrame
+
+local outputFrame = Instance.new("ScrollingFrame")
+outputFrame.Size = UDim2.new(1, -20, 0, 130)
+outputFrame.Position = UDim2.new(0, 10, 0, 140)
+outputFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+outputFrame.BorderSizePixel = 0
+outputFrame.ScrollBarThickness = 6
+outputFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+outputFrame.Parent = mainFrame
+
+local UIListLayout = Instance.new("UIListLayout", outputFrame)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 2)
+
+local function formatTime()
+    local t = os.date("*t")
+    return string.format("[%02d:%02d:%02d]", t.hour, t.min, t.sec)
+end
+
+local function addOutputLine(line)
+    local msg = Instance.new("TextLabel")
+    msg.Size = UDim2.new(1, -10, 0, 20)
+    msg.BackgroundTransparency = 1
+    msg.TextColor3 = Color3.new(1, 1, 1)
+    msg.Font = Enum.Font.SourceSans
+    msg.TextSize = 14
+    msg.TextXAlignment = Enum.TextXAlignment.Left
+    msg.Text = line
+    msg.Parent = outputFrame
+    outputFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 5)
+    outputFrame.CanvasPosition = Vector2.new(0, outputFrame.CanvasSize.Y.Offset)
+end
+
+local placeAllowed = allowedPlaceIds[game.PlaceId] or false
+local mainToggled = false
+local filterToggled = false
+
+local function setFilterToggle(state)
+    filterToggled = state
+    filterToggle.Text = state and "On :3" or "Off :-("
+    filterToggle.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+end
+
+local function updateFilterToggleState()
+    if not mainToggled then
+        filterToggle.Active = false
+        filterToggle.AutoButtonColor = false
+        if placeAllowed then
+            filterToggle.Text = "Off :-("
+            filterToggle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        else
+            filterToggle.Text = "Can't enable, not playing peak game."
+            filterToggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        end
+        filterToggled = false
+    else
+        if placeAllowed then
+            filterToggle.Active = true
+            filterToggle.AutoButtonColor = true
+            filterToggle.Text = filterToggled and "On :3" or "Off :-("
+            filterToggle.BackgroundColor3 = filterToggled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+        else
+            filterToggle.Active = false
+            filterToggle.AutoButtonColor = false
+            filterToggle.Text = "Can't enable, not playing peak game."
+            filterToggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            filterToggled = false
+        end
+    end
+end
+
+local function setMainToggle(state)
+    mainToggled = state
+    toggleButton.Text = state and "On :3" or "Off :-("
+    toggleButton.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    if not state then setFilterToggle(false) end
+    addOutputLine(state and "[ZundaSpy On Noda!]" or "[ZundaSpy Off Noda!]")
+    updateFilterToggleState()
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    setMainToggle(not mainToggled)
+end)
+
+filterToggle.MouseButton1Click:Connect(function()
+    if not filterToggle.Active then return end
+    setFilterToggle(not filterToggled)
+end)
+
+minimizeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    wait(0.3)
+    local reopenButton = Instance.new("TextButton")
+    reopenButton.Text = "Open ZundaSpy"
+    reopenButton.Size = UDim2.new(0, 120, 0, 30)
+    reopenButton.Position = UDim2.new(1, -140, 0, 40)
+    reopenButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    reopenButton.TextColor3 = Color3.new(1, 1, 1)
+    reopenButton.Font = Enum.Font.SourceSans
+    reopenButton.TextSize = 14
+    reopenButton.Parent = screenGui
+
+    -- Draggable reopen button
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    reopenButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = reopenButton.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    reopenButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            reopenButton.Position = UDim2.new(
+                framePos.X.Scale,
+                framePos.X.Offset + delta.X,
+                framePos.Y.Scale,
+                framePos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    reopenButton.MouseButton1Click:Connect(function()
+        mainFrame.Visible = true
+        reopenButton:Destroy()
+    end)
+end)
+
+-- Drag support for main frame
+local dragging = false
+local dragInput, mousePos, framePos
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        mainFrame.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+local function isAdmin(plr)
+    return plr.UserId == game.CreatorId
+end
+
+local function onPlayerChatted(plr, message)
+    if not mainToggled then return end
+    if filterToggled and mainToggled then
+        if not (message:find(";") or message:find("/")) then return end
+    end
+    local timeStamp = formatTime()
+    local adminTag = isAdmin(plr) and "ADMIN" or nil
+    local logLine
+    if adminTag then
+        logLine = string.format("%s %s, %s, %s", timeStamp, plr.Name, adminTag, message)
+    else
+        logLine = string.format("%s %s, %s", timeStamp, plr.Name, message)
+    end
+    addOutputLine(logLine)
+end
+
+for _, plr in pairs(game.Players:GetPlayers()) do
+    plr.Chatted:Connect(function(msg) onPlayerChatted(plr, msg) end)
+end
+
+game.Players.PlayerAdded:Connect(function(plr)
+    plr.Chatted:Connect(function(msg) onPlayerChatted(plr, msg) end)
+end)
